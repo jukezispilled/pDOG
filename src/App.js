@@ -48,7 +48,7 @@ function App() {
   }, []);
 
   const handleCopy = () => {
-    const contractAddress = 'updating...';
+    const contractAddress = 'uploading...';
     navigator.clipboard.writeText(contractAddress).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000); // Reset the copied state after 2 seconds
@@ -117,7 +117,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen w-screen flex justify-center items-center relative overflow-hidden">
+    <div className="h-[100dvh] w-screen flex justify-center items-center relative overflow-hidden">
       {/* Video as background */}
       <video
         ref={videoRef}
