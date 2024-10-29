@@ -7,10 +7,10 @@ function App() {
   // Check if the screen size is medium or larger
   const isMediumOrLarger = useMediaQuery({ query: '(min-width: 768px)' });
   const [copied, setCopied] = useState(false);
-  const ca = 'uploading...';
+  const ca = '8Tw9xibMgHGfUJHwfXdSbDUQijKs7yUFJ2Z7m1rfpump';
 
   const handleCopy = () => {
-    const contractAddress = 'uploading...';
+    const contractAddress = '8Tw9xibMgHGfUJHwfXdSbDUQijKs7yUFJ2Z7m1rfpump';
     navigator.clipboard.writeText(contractAddress).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000); // Reset the copied state after 2 seconds
