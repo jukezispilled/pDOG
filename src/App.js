@@ -13,10 +13,10 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Background sets
 const backgroundSets = [
-  { bg: bg, glitch: bgg },
-  { bg: bg1, glitch: bg1g },
-  { bg: bg2, glitch: bg2g },
-  { bg: bg3, glitch: bg3g },
+  { bg: bg, glitch: bgg, label: 'Bedroom' },
+  { bg: bg1, glitch: bg1g, label: 'Stairway' },
+  { bg: bg2, glitch: bg2g, label: 'Bathroom' },
+  { bg: bg3, glitch: bg3g, label: 'Baby\'s Room' },
 ];
 
 function App() {
@@ -28,9 +28,21 @@ function App() {
   const [isSoundOn, setIsSoundOn] = useState(false); // State to track sound status
   const audioRef = React.useRef(new Audio('sound.mp3')); // Ref to hold audio instance
 
+  // Time state
+  const [currentTime, setCurrentTime] = useState(new Date(0, 0, 0, 3, 15)); // Start time at 3:15 AM
+
   // Set the audio to loop
   useEffect(() => {
     audioRef.current.loop = true;
+  }, []);
+
+  // Update time every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(prev => new Date(prev.getTime() + 1000)); // Increment time by 1 second
+    }, 1000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleCopy = () => {
@@ -94,6 +106,14 @@ function App() {
     });
   };
 
+  // Format time to HH:MM:SS
+  const formatTime = (date) => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
   return (
     <div className="h-screen w-screen flex justify-center items-center relative overflow-hidden">
       {/* Video as background */}
@@ -134,11 +154,21 @@ function App() {
               onError={(e) => console.error('Error loading video:', e)} // Log error if any
             />
           ) : (
-            <img
-              src={currentBg}
-              alt="Background"
-              className="w-full h-full object-cover"
-            />
+            <div className="relative w-full h-full">
+              <img
+                src={currentBg}
+                alt="Background"
+                className="w-full h-full object-cover"
+              />
+              {/* Live clock at the bottom right of the background image */}
+              <div className="absolute bottom-5 right-5 text-xl text-red-600">
+                {formatTime(currentTime)}
+              </div>
+              {/* View location right above the time */}
+              <div className="absolute bottom-12 right-5 text-xl text-red-600">
+                {backgroundSets[currentSetIndex].label}
+              </div>
+            </div>
           )}
         </div>
         <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 bg-black p-3 rounded-full shadow-lg flex space-x-4 text-red-600">
