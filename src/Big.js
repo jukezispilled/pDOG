@@ -10,6 +10,7 @@ import bg2g from './bg2-.png'; // Import the second glitch background
 import bg3g from './bg3-.png'; // Import the third glitch background
 import blurVideo from './blur.mp4'; // Import the video
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Marquee from 'react-fast-marquee';
 
 // Background sets
 const backgroundSets = [
@@ -123,6 +124,18 @@ function Big({ handleCopy, copied, ca }) {
       </video>
 
       <div className='absolute inset-0 h-full w-full bg-black opacity-60'></div>
+
+      <div className='absolute w-[115%] bg-yellow-500 rotate-45 opacity-30'>
+        <Marquee speed={70}>
+            <span className='text-7xl font-extrabold'>BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE&nbsp;</span>
+        </Marquee>
+      </div>
+
+      <div className='absolute w-[115%] bg-yellow-500 -rotate-45 opacity-30'>
+        <Marquee speed={70}>
+            <span className='text-7xl font-extrabold'>BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE BEWARE&nbsp;</span>
+        </Marquee>
+      </div>
 
       <div className='absolute top-5 bg-black text-white rounded-full p-0.5'>
         <button
