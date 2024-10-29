@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import bg from './bg.png';
 import bg1 from './bg1.png';
@@ -26,8 +26,34 @@ function App() {
   const [copied, setCopied] = useState(false);
   const [isSoundOn, setIsSoundOn] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
-  const audioRef = React.useRef(new Audio('sound.mp3'));
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const audioRef = useRef(new Audio('sound.mp3'));
+  const bgVideoRef = useRef(null);
+  const glitchVideoRef = useRef(null);
   const [currentTime, setCurrentTime] = useState(new Date(0, 0, 0, 3, 15));
+
+  // Preload videos
+  useEffect(() => {
+    const preloadVideo = async () => {
+      try {
+        if (bgVideoRef.current) {
+          bgVideoRef.current.load();
+          await bgVideoRef.current.play();
+          setVideoLoaded(true);
+        }
+      } catch (error) {
+        console.error('Video preload error:', error);
+        // Fallback for browsers that block autoplay
+        const playOnInteraction = () => {
+          bgVideoRef.current?.play();
+          setVideoLoaded(true);
+          document.removeEventListener('touchstart', playOnInteraction);
+        };
+        document.addEventListener('touchstart', playOnInteraction);
+      }
+    };
+    preloadVideo();
+  }, []);
 
   useEffect(() => {
     audioRef.current.loop = true;
@@ -40,26 +66,20 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Handle mobile swipe gestures
   const handleTouchStart = (e) => {
     setTouchStart(e.touches[0].clientX);
   };
 
   const handleTouchEnd = useCallback((e) => {
     if (!touchStart) return;
-
     const touchEnd = e.changedTouches[0].clientX;
     const diff = touchStart - touchEnd;
-
-    // Minimum swipe distance threshold (in pixels)
     const minSwipeDistance = 50;
 
     if (Math.abs(diff) > minSwipeDistance) {
       if (diff > 0) {
-        // Swipe left
         changeBackgroundSet((currentSetIndex + 1) % backgroundSets.length);
       } else {
-        // Swipe right
         changeBackgroundSet((currentSetIndex - 1 + backgroundSets.length) % backgroundSets.length);
       }
     }
@@ -71,18 +91,18 @@ function App() {
     try {
       await navigator.clipboard.writeText(contractAddress);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      // Fallback for browsers that don't support clipboard API
       const textarea = document.createElement('textarea');
       textarea.value = contractAddress;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
       document.body.removeChild(textarea);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
+    setTimeout(() => setCopied(false), 2000);
   };
 
   useEffect(() => {
@@ -90,6 +110,15 @@ function App() {
       setIsGlitching(true);
       setCurrentBg(backgroundSets[currentSetIndex].glitch);
       setIsVideoPlaying(true);
+
+      // Try to play the glitch video
+      if (glitchVideoRef.current) {
+        glitchVideoRef.current.currentTime = 0;
+        const playPromise = glitchVideoRef.current.play();
+        if (playPromise) {
+          playPromise.catch(error => console.error('Glitch video play error:', error));
+        }
+      }
 
       const videoTimeout = setTimeout(() => {
         setIsVideoPlaying(false);
@@ -99,6 +128,15 @@ function App() {
         setIsGlitching(false);
         setCurrentBg(backgroundSets[currentSetIndex].bg);
         setIsVideoPlaying(true);
+        
+        // Try to play the glitch video again
+        if (glitchVideoRef.current) {
+          glitchVideoRef.current.currentTime = 0;
+          const playPromise = glitchVideoRef.current.play();
+          if (playPromise) {
+            playPromise.catch(error => console.error('Glitch video play error:', error));
+          }
+        }
       }, 1000);
 
       const bgBackTimeout = setTimeout(() => {
@@ -124,7 +162,6 @@ function App() {
     setIsSoundOn((prev) => {
       const newState = !prev;
       if (newState) {
-        // Mobile browsers require user interaction before playing audio
         audioRef.current.play().catch((error) => {
           console.error('Error playing audio:', error);
           setIsSoundOn(false);
@@ -147,12 +184,14 @@ function App() {
   return (
     <div className="h-screen w-screen flex justify-center items-center relative overflow-hidden">
       <video 
+        ref={bgVideoRef}
         src={blurVideo} 
         autoPlay 
         muted 
         playsInline
         loop
-        className="absolute inset-0 w-full h-full object-cover opacity-60 z-0" 
+        preload="auto"
+        className={`absolute inset-0 w-full h-full object-cover opacity-60 z-0 ${videoLoaded ? 'block' : 'hidden'}`}
       />
       <div className='absolute inset-0 h-full w-full bg-black opacity-60'></div>
 
@@ -178,13 +217,14 @@ function App() {
         >
           {isVideoPlaying ? (
             <video 
+              ref={glitchVideoRef}
               src={blurVideo}
               autoPlay 
               muted 
               playsInline
+              preload="auto"
               className="w-full h-full object-fill z-10" 
               onEnded={() => setIsVideoPlaying(false)}
-              onError={(e) => console.error('Error loading video:', e)}
             />
           ) : (
             <div className="relative w-full h-full font-mono">
