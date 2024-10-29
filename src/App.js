@@ -154,7 +154,7 @@ function App() {
               onError={(e) => console.error('Error loading video:', e)} // Log error if any
             />
           ) : (
-            <div className="relative w-full h-full">
+            <div className="relative w-full h-full font-mono">
               <img
                 src={currentBg}
                 alt="Background"
