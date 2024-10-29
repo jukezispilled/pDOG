@@ -116,9 +116,6 @@ function App() {
     return `${hours}:${minutes}:${seconds}`;
   };
 
-  // Check if screen size is mobile
-  const isMobile = window.innerWidth < 768;
-
   return (
     <div className="h-[100dvh] w-screen flex justify-center items-center relative overflow-hidden">
       {/* Video as background */}
@@ -164,7 +161,7 @@ function App() {
           ) : (
             <div className="relative w-full h-full font-mono">
               <img
-                src={isMobile ? backgroundSets[currentSetIndex].glitch : currentBg} // Render glitch background on mobile
+                src={currentBg}
                 alt="Background"
                 className="w-full h-full object-cover"
               />
