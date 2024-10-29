@@ -79,7 +79,7 @@ function App() {
         clearTimeout(bgTimeout);
         clearTimeout(bgBackTimeout);
       };
-    }, 4000); // Change every 4 seconds
+    }, 4600); // Change every 4.6 seconds (3 sec original bg, 0.3 sec blur, 1 sec glitch, 0.3 sec blur)
 
     return () => clearInterval(interval); // Cleanup interval
   }, [currentSetIndex]); // Add currentSetIndex as a dependency
@@ -118,14 +118,14 @@ function App() {
     <div className="h-screen w-screen flex justify-center items-center relative overflow-hidden">
       {/* Video as background */}
       <video 
-        src={blurVideo} // Use imported video here
+        src={blurVideo} 
         autoPlay 
         muted 
         playsInline
         loop // Loop the video
         className="absolute inset-0 w-full h-full object-cover opacity-60 z-0" 
       />
-      <div className='absolute inset-0 h-full w-full bg-black opacity-20'></div>
+      <div className='absolute inset-0 h-full w-full bg-black opacity-60'></div>
 
       <div className='absolute top-5 bg-black text-white rounded-full p-0.5'>
         <button
@@ -145,7 +145,7 @@ function App() {
         <div className={`relative overflow-hidden w-full h-[calc(100%-40px)] transition-all rounded-b-md ${isGlitching ? 'animate-glitch' : ''}`}>
           {isVideoPlaying ? (
             <video 
-              src={blurVideo} // Use imported video here
+              src={blurVideo}
               autoPlay 
               muted 
               playsInline
