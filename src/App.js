@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import './App.css';
-import bg from './bg.png';
-import bg1 from './bg1.png';
-import bg2 from './bg2.png';
-import bg3 from './bg3.png';
-import bgg from './bg-.png';
-import bg1g from './bg1-.png';
-import bg2g from './bg2-.png';
-import bg3g from './bg3-.png';
-import blurVideo from './blur.mp4';
+import React, { useState, useEffect, useRef } from 'react';
+import './App.css'; // Import CSS for styling
+import bg from './bg.png'; // Import the first background image
+import bg1 from './bg1.png'; // Import the first glitch background
+import bg2 from './bg2.png'; // Import the second glitch background
+import bg3 from './bg3.png'; // Import the third glitch background
+import bgg from './bg-.png'; // Import the first background glitch image
+import bg1g from './bg1-.png'; // Import the first glitch background
+import bg2g from './bg2-.png'; // Import the second glitch background
+import bg3g from './bg3-.png'; // Import the third glitch background
+import blurVideo from './blur.mp4'; // Import the video
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+// Background sets
 const backgroundSets = [
   { bg: bg, glitch: bgg, label: 'Bedroom' },
   { bg: bg1, glitch: bg1g, label: 'Stairway' },
@@ -24,156 +25,90 @@ function App() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isSoundOn, setIsSoundOn] = useState(false);
-  const [touchStart, setTouchStart] = useState(null);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const audioRef = useRef(new Audio('sound.mp3'));
-  const bgVideoRef = useRef(null);
-  const glitchVideoRef = useRef(null);
-  const [currentTime, setCurrentTime] = useState(new Date(0, 0, 0, 3, 15));
+  const [isSoundOn, setIsSoundOn] = useState(false); // State to track sound status
+  const audioRef = React.useRef(new Audio('sound.mp3')); // Ref to hold audio instance
+  const [muted, setMuted] = useState(true);
+  const videoRef = useRef(null);
 
-  // Preload videos
-  useEffect(() => {
-    const preloadVideo = async () => {
-      try {
-        if (bgVideoRef.current) {
-          bgVideoRef.current.load();
-          await bgVideoRef.current.play();
-          setVideoLoaded(true);
-        }
-      } catch (error) {
-        console.error('Video preload error:', error);
-        // Fallback for browsers that block autoplay
-        const playOnInteraction = () => {
-          bgVideoRef.current?.play();
-          setVideoLoaded(true);
-          document.removeEventListener('touchstart', playOnInteraction);
-        };
-        document.addEventListener('touchstart', playOnInteraction);
-      }
-    };
-    preloadVideo();
-  }, []);
+  // Time state
+  const [currentTime, setCurrentTime] = useState(new Date(0, 0, 0, 3, 15)); // Start time at 3:15 AM
 
+  // Set the audio to loop
   useEffect(() => {
     audioRef.current.loop = true;
   }, []);
 
+  // Update time every second
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentTime(prev => new Date(prev.getTime() + 1000));
+      setCurrentTime(prev => new Date(prev.getTime() + 1000)); // Increment time by 1 second
     }, 1000);
+    
     return () => clearInterval(interval);
   }, []);
 
-  const handleTouchStart = (e) => {
-    setTouchStart(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = useCallback((e) => {
-    if (!touchStart) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-    const minSwipeDistance = 50;
-
-    if (Math.abs(diff) > minSwipeDistance) {
-      if (diff > 0) {
-        changeBackgroundSet((currentSetIndex + 1) % backgroundSets.length);
-      } else {
-        changeBackgroundSet((currentSetIndex - 1 + backgroundSets.length) % backgroundSets.length);
-      }
-    }
-    setTouchStart(null);
-  }, [touchStart, currentSetIndex]);
-
-  const handleCopy = async () => {
+  const handleCopy = () => {
     const contractAddress = 'updating...';
-    try {
-      await navigator.clipboard.writeText(contractAddress);
+    navigator.clipboard.writeText(contractAddress).then(() => {
       setCopied(true);
-    } catch (err) {
-      const textarea = document.createElement('textarea');
-      textarea.value = contractAddress;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopied(true);
-    }
-    setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2000); // Reset the copied state after 2 seconds
+    });
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
       setIsGlitching(true);
-      setCurrentBg(backgroundSets[currentSetIndex].glitch);
-      setIsVideoPlaying(true);
-
-      // Try to play the glitch video
-      if (glitchVideoRef.current) {
-        glitchVideoRef.current.currentTime = 0;
-        const playPromise = glitchVideoRef.current.play();
-        if (playPromise) {
-          playPromise.catch(error => console.error('Glitch video play error:', error));
-        }
-      }
+      setCurrentBg(backgroundSets[currentSetIndex].glitch); // Set to glitch background
+      setIsVideoPlaying(true); // Start video when changing backgrounds
 
       const videoTimeout = setTimeout(() => {
-        setIsVideoPlaying(false);
-      }, 300);
+        setIsVideoPlaying(false); // Stop video after playback
+      }, 300); // Video duration
 
       const bgTimeout = setTimeout(() => {
         setIsGlitching(false);
-        setCurrentBg(backgroundSets[currentSetIndex].bg);
-        setIsVideoPlaying(true);
-        
-        // Try to play the glitch video again
-        if (glitchVideoRef.current) {
-          glitchVideoRef.current.currentTime = 0;
-          const playPromise = glitchVideoRef.current.play();
-          if (playPromise) {
-            playPromise.catch(error => console.error('Glitch video play error:', error));
-          }
-        }
-      }, 1000);
+        setCurrentBg(backgroundSets[currentSetIndex].bg); // Change to regular background
+        setIsVideoPlaying(true); // Start video when changing back to regular bg
+      }, 1000); // Show glitch bg for 1 second before switching back
 
       const bgBackTimeout = setTimeout(() => {
-        setIsVideoPlaying(false);
-      }, 300);
+        setIsVideoPlaying(false); // Stop video after it plays when switching back
+      }, 300); // Match this duration with the first video playback duration
 
+      // Cleanup timeouts
       return () => {
         clearTimeout(videoTimeout);
         clearTimeout(bgTimeout);
         clearTimeout(bgBackTimeout);
       };
-    }, 4600);
+    }, 4600); // Change every 4.6 seconds (3 sec original bg, 0.3 sec blur, 1 sec glitch, 0.3 sec blur)
 
-    return () => clearInterval(interval);
-  }, [currentSetIndex]);
+    return () => clearInterval(interval); // Cleanup interval
+  }, [currentSetIndex]); // Add currentSetIndex as a dependency
 
+  // Function to change background set manually
   const changeBackgroundSet = (index) => {
     setCurrentSetIndex(index);
-    setCurrentBg(backgroundSets[index].bg);
+    setCurrentBg(backgroundSets[index].bg); // Change to the regular background of the selected set
   };
 
-  const toggleSound = async () => {
+  // Function to toggle sound
+  const toggleSound = () => {
     setIsSoundOn((prev) => {
       const newState = !prev;
+
       if (newState) {
-        audioRef.current.play().catch((error) => {
-          console.error('Error playing audio:', error);
-          setIsSoundOn(false);
-        });
+        audioRef.current.play().catch((error) => console.error('Error playing audio:', error)); // Play sound when turned on
       } else {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
+        audioRef.current.pause(); // Pause sound when turned off
+        audioRef.current.currentTime = 0; // Reset playback time
       }
+
       return newState;
     });
   };
 
+  // Format time to HH:MM:SS
   const formatTime = (date) => {
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -183,16 +118,18 @@ function App() {
 
   return (
     <div className="h-screen w-screen flex justify-center items-center relative overflow-hidden">
-      <video 
-        ref={bgVideoRef}
-        src={blurVideo} 
-        autoPlay 
-        muted 
-        playsInline
+      {/* Video as background */}
+      <video
+        ref={videoRef}
+        autoPlay
         loop
-        preload="auto"
-        className={`absolute inset-0 w-full h-full object-cover opacity-60 z-0 ${videoLoaded ? 'block' : 'hidden'}`}
-      />
+        muted={muted}
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover opacity-60"
+        style={{ pointerEvents: 'none' }} // Prevent the video from capturing pointer events
+      >
+        <source src={`${process.env.PUBLIC_URL}/blur.mp4`} type="video/mp4" />
+      </video>
       <div className='absolute inset-0 h-full w-full bg-black opacity-60'></div>
 
       <div className='absolute top-5 bg-black text-white rounded-full p-0.5'>
@@ -205,26 +142,21 @@ function App() {
         <span className='p-1 text-[10px] md:text-base font-mono'>uploading...</span>
       </div>
 
-      <div className="w-[95%] h-[40%] md:w-[65%] md:h-[60%] bg-black rounded-md z-10">
+      <div className="w-[90%] h-[40%] md:w-[65%] md:h-[60%] bg-black rounded-md z-10">
         <div className="bg-black text-white p-2 flex justify-between items-center rounded-t-md">
-          <span className="font-bold font-mono text-base md:text-xl text-red-600">Paranormal Doge</span>
+          <span className="font-bold font-mono text-xl text-red-600">Paranormal Doge</span>
           <button className="bg-red-600 text-white px-2 rounded-full">X</button>
         </div>
-        <div 
-          className={`relative overflow-hidden w-full h-[calc(100%-40px)] transition-all rounded-b-md ${isGlitching ? 'animate-glitch' : ''}`}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
+        <div className={`relative overflow-hidden w-full h-[calc(100%-40px)] transition-all rounded-b-md ${isGlitching ? 'animate-glitch' : ''}`}>
           {isVideoPlaying ? (
             <video 
-              ref={glitchVideoRef}
               src={blurVideo}
               autoPlay 
               muted 
               playsInline
-              preload="auto"
               className="w-full h-full object-fill z-10" 
-              onEnded={() => setIsVideoPlaying(false)}
+              onEnded={() => setIsVideoPlaying(false)} // Stop video when it ends
+              onError={(e) => console.error('Error loading video:', e)} // Log error if any
             />
           ) : (
             <div className="relative w-full h-full font-mono">
@@ -232,26 +164,27 @@ function App() {
                 src={currentBg}
                 alt="Background"
                 className="w-full h-full object-cover"
-                draggable="false"
               />
-              <div className="absolute bottom-3 right-3 md:bottom-5 md:right-5 text-lg md:text-xl text-red-600">
+              {/* Live clock at the bottom right of the background image */}
+              <div className="absolute bottom-5 right-5 text-xl text-red-600">
                 {formatTime(currentTime)}
               </div>
-              <div className="absolute bottom-8 right-3 md:bottom-12 md:right-5 text-lg md:text-xl text-red-600">
+              {/* View location right above the time */}
+              <div className="absolute bottom-12 right-5 text-xl text-red-600">
                 {backgroundSets[currentSetIndex].label}
               </div>
             </div>
           )}
         </div>
-        <div className="absolute bottom-3 md:bottom-5 left-1/2 transform -translate-x-1/2 bg-black p-2 md:p-3 rounded-full shadow-lg flex space-x-2 md:space-x-4 text-red-600">
-          <button onClick={() => changeBackgroundSet((currentSetIndex - 1 + backgroundSets.length) % backgroundSets.length)} className="touch-manipulation">
-            <ChevronLeft className="size-8 md:size-12" />
+        <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 bg-black p-3 rounded-full shadow-lg flex space-x-4 text-red-600">
+          <button onClick={() => changeBackgroundSet((currentSetIndex - 1 + backgroundSets.length) % backgroundSets.length)} className="">
+            <ChevronLeft className="size-10 md:size-12" />
           </button>
-          <button onClick={() => changeBackgroundSet((currentSetIndex + 1) % backgroundSets.length)} className="touch-manipulation">
-            <ChevronRight className="size-8 md:size-12" />
+          <button onClick={() => changeBackgroundSet((currentSetIndex + 1) % backgroundSets.length)} className="">
+            <ChevronRight className="size-10 md:size-12" />
           </button>
-          <button onClick={toggleSound} className="touch-manipulation">
-            {isSoundOn ? <img src="off.ico" className='size-8 md:size-12' alt="sound off" /> : <img src="sound.ico" className='size-8 md:size-12' alt="sound on" />}
+          <button onClick={toggleSound} className="">
+            {isSoundOn ? <img src="off.ico" className='size-10 md:size-12' /> : <img src="sound.ico" className='size-10 md:size-12' />}
           </button>
         </div>
       </div>
